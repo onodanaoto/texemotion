@@ -1,22 +1,16 @@
 import streamlit as st
 import sys
-import pkg_resources
 import os
 
 # デバッグ情報の表示
 st.write(f"Python version: {sys.version}")
 st.write(f"Streamlit version: {st.__version__}")
 
-# インストールされているパッケージの一覧表示
-st.write("Installed packages:")
-installed_packages = [d for d in pkg_resources.working_set]
-for package in installed_packages:
-    st.write(f"{package.key} == {package.version}")
-
 # OpenAIのインポートを試みる
 try:
     from openai import OpenAI
-    st.write("OpenAI imported successfully")
+    import openai
+    st.write(f"OpenAI imported successfully. Version: {openai.__version__}")
 except ImportError as e:
     st.error(f"Failed to import OpenAI: {e}")
     st.stop()
