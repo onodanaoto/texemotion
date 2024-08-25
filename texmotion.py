@@ -20,14 +20,19 @@ for key in st.secrets.keys():
 # OpenAI APIキーの取得（複数の方法を試す）
 api_key = st.secrets.get("OPENAI_API_KEY")
 if not api_key:
-    api_key = st.secrets.get("openai", {}).get("api_key")  # ネストされた辞書からの取得を試みる
+    api_key = st.secrets.get("some_section", {}).get("OPENAI_API_KEY")
 if not api_key:
     api_key = os.environ.get("OPENAI_API_KEY")
-if not api_key:
+
+if api_key:
+    st.write(f"APIキーの先頭: {api_key[:5]}...")
+else:
     st.error("OpenAI API keyが見つかりません。Streamlit Cloudの'Secrets'セクションまたは環境変数でOPENAI_API_KEYを設定してください。")
+    st.write("現在のSecrets構造:")
+    st.write(st.secrets)
     st.stop()
 
-st.write(f"APIキーの先頭: {api_key[:5]}...")
+
 
 
 
