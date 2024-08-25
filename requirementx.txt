@@ -1,3 +1,3 @@
-streamlit
-openai
-pyperclip
+streamlit==1.29.0
+openai==1.3.7
+pyperclip==1.8.2
