@@ -1,37 +1,24 @@
 import streamlit as st
-import os
-from openai import OpenAI
+import sys
 
-# デバッグ情報の表示
-st.write("環境変数:")
-for key, value in os.environ.items():
-    if 'KEY' in key or key == 'OPENAI_API_KEY':
-        st.write(f"{key}: {'*' * len(value)}")
+st.write(f"Python version: {sys.version}")
+st.write(f"Streamlit version: {st.__version__}")
 
-# Streamlit Secrets の内容を確認
-st.write("Streamlit Secrets:")
-for key in st.secrets.keys():
-    if isinstance(st.secrets[key], dict):
-        st.write(f"{key}:")
-        for subkey, subvalue in st.secrets[key].items():
-            st.write(f"  {subkey}: {'*' * len(str(subvalue))}")
-    else:
-        st.write(f"{key}: {'*' * len(str(st.secrets[key]))}")
+try:
+    from openai import OpenAI
+    st.write("OpenAI imported successfully")
+except ImportError as e:
+    st.error(f"Failed to import OpenAI: {e}")
 
-# OpenAI APIキーの取得（複数の方法を試す）
-api_key = st.secrets.get("OPENAI_API_KEY")
-if not api_key:
-    api_key = st.secrets.get("some_section", {}).get("OPENAI_API_KEY")
-if not api_key:
-    api_key = os.environ.get("OPENAI_API_KEY")
+# ... 既存のコード ...
 
-if api_key:
-    st.write(f"APIキーの先頭: {api_key[:5]}...")
-else:
-    st.error("OpenAI API keyが見つかりません。Streamlit Cloudの'Secrets'セクションまたは環境変数でOPENAI_API_KEYを設定してください。")
-    st.write("現在のSecrets構造:")
-    st.write(st.secrets)
-    st.stop()
+st.write(f"API key found: {'Yes' if api_key else 'No'}")
+
+try:
+    client = OpenAI(api_key=api_key)
+    st.write("OpenAI client created successfully")
+except Exception as e:
+    st.error(f"Failed to create OpenAI client: {e}")
 
 
 
