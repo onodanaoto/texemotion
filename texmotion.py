@@ -4,22 +4,29 @@ import os
 # デバッグ情報の表示
 st.write("環境変数:")
 for key, value in os.environ.items():
-    if 'KEY' in key or key == 'OPENAI_API_KEY':  # APIキーなどの機密情報を含む可能性のある環境変数名のみ表示
-        st.write(f"{key}: {'*' * len(value)}")  # 値を*でマスク
+    if 'KEY' in key or key == 'OPENAI_API_KEY':
+        st.write(f"{key}: {'*' * len(value)}")
 
 # Streamlit Secrets の内容を確認
 st.write("Streamlit Secrets:")
 for key in st.secrets.keys():
-    if 'KEY' in key or key == 'OPENAI_API_KEY':
+    if isinstance(st.secrets[key], dict):
+        st.write(f"{key}:")
+        for subkey, subvalue in st.secrets[key].items():
+            st.write(f"  {subkey}: {'*' * len(str(subvalue))}")
+    else:
         st.write(f"{key}: {'*' * len(str(st.secrets[key]))}")
 
 # OpenAI APIキーの取得（複数の方法を試す）
-api_key = st.secrets.get("OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
+api_key = st.secrets.get("OPENAI_API_KEY")
+if not api_key:
+    api_key = os.environ.get("OPENAI_API_KEY")
 if not api_key:
     st.error("OpenAI API keyが見つかりません。Streamlit Cloudの'Secrets'セクションまたは環境変数でOPENAI_API_KEYを設定してください。")
     st.stop()
 
-st.write(f"APIキーの先頭: {api_key[:5]}...")  # セキュリティのため先頭のみ表示
+st.write(f"APIキーの先頭: {api_key[:5]}...")
+
 
 
 
