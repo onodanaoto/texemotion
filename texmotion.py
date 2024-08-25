@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+from openai import OpenAI
 
 # デバッグ情報の表示
 st.write("環境変数:")
