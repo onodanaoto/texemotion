@@ -1,10 +1,17 @@
 import streamlit as st
-from openai import OpenAI
 import os
+
+try:
+    from openai import OpenAI
+except ImportError:
+    st.error("OpenAIライブラリがインストールされていません。requirements.txtを確認してください。")
+    st.stop()
+
 import pyperclip
 
 # OpenAI クライアントの初期化
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
 
 # APIキーが設定されていない場合のエラー処理
 if not client.api_key:
