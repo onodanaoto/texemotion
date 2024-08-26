@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+from openai import OpenAI, error
 import os
 import pyperclip
 
@@ -31,8 +31,12 @@ def enhance_message(message, emotion, use_emoji):
         )
 
         return response.choices[0].message.content
-    except Exception as e:
+    except error.OpenAIError as e:
         st.error(f"OpenAI APIエラー: {str(e)}")
+        st.write("エラーの詳細:", e.http_status, e.error_code, e.user_message)
+        return None
+    except Exception as e:
+        st.error(f"予期しないエラー: {str(e)}")
         st.write("エラーの詳細:", e)
         return None
 
