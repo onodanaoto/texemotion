@@ -4,7 +4,11 @@ import os
 import pyperclip
 
 # OpenAI クライアントの初期化
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+api_key = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+
+# APIキーの一部を表示（セキュリティのため、全体は表示しない）
+st.write("API Key (部分):", api_key[:4] + "****" + api_key[-4:] if api_key else "None")
 
 # APIキーが設定されていない場合のエラー処理
 if not client.api_key:
@@ -29,6 +33,7 @@ def enhance_message(message, emotion, use_emoji):
         return response.choices[0].message.content
     except Exception as e:
         st.error(f"OpenAI APIエラー: {str(e)}")
+        st.write("エラーの詳細:", e)
         return None
 
 def main():
