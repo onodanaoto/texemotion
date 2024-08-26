@@ -1,48 +1,15 @@
 import streamlit as st
-import sys
+from openai import OpenAI
 import os
-
-# デバッグ情報の表示
-st.write(f"Python version: {sys.version}")
-st.write(f"Streamlit version: {st.__version__}")
-
-# OpenAIのインポートを試みる
-try:
-    from openai import OpenAI
-    import openai
-    st.write(f"OpenAI imported successfully. Version: {openai.__version__}")
-except ImportError as e:
-    st.error(f"Failed to import OpenAI: {e}")
-    st.stop()
-
-# Streamlit Secrets の内容を確認
-st.write("Streamlit Secrets:")
-for key in st.secrets.keys():
-    if isinstance(st.secrets[key], dict):
-        st.write(f"{key}:")
-        for subkey, subvalue in st.secrets[key].items():
-            st.write(f"  {subkey}: {'*' * len(str(subvalue))}")
-    else:
-        st.write(f"{key}: {'*' * len(str(st.secrets[key]))}")
-
-# OpenAI APIキーの取得
-api_key = st.secrets.get("OPENAI_API_KEY")
-
-if api_key:
-    st.write(f"APIキーの先頭: {api_key[:5]}...")
-else:
-    st.error("OpenAI API keyが見つかりません。Streamlit Cloudの'Secrets'セクションでOPENAI_API_KEYを設定してください。")
-    st.stop()
-
-# OpenAIクライアントの初期化
-try:
-    client = OpenAI(api_key=api_key)
-    st.write("OpenAI client created successfully")
-except Exception as e:
-    st.error(f"Failed to create OpenAI client: {e}")
-    st.stop()
-
 import pyperclip
+
+# OpenAI クライアントの初期化
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# APIキーが設定されていない場合のエラー処理
+if not client.api_key:
+    st.error("OpenAI API keyが設定されていません。環境変数OPENAI_API_KEYを設定してください。")
+    st.stop()
 
 def enhance_message(message, emotion, use_emoji):
     try:
