@@ -1,6 +1,6 @@
 import streamlit as st
 import sys
-import os
+from openai import OpenAI
 
 # デバッグ情報の表示
 st.write(f"Python version: {sys.version}")
@@ -8,46 +8,96 @@ st.write(f"Streamlit version: {st.__version__}")
 
 # OpenAIのインポートを試みる
 try:
-    from openai import OpenAI
     import openai
     st.write(f"OpenAI imported successfully. Version: {openai.__version__}")
 except ImportError as e:
     st.error(f"Failed to import OpenAI: {e}")
     st.stop()
 
-# Streamlit Secrets の内容を確認
-st.write("Streamlit Secrets:")
-for key in st.secrets.keys():
-    if isinstance(st.secrets[key], dict):
-        st.write(f"{key}:")
-        for subkey, subvalue in st.secrets[key].items():
-            st.write(f"  {subkey}: {'*' * len(str(subvalue))}")
-    else:
-        st.write(f"{key}: {'*' * len(str(st.secrets[key]))}")
+# セッション状態の初期化
+if 'api_key' not in st.session_state:
+    st.session_state.api_key = ''
+if 'api_key_confirmed' not in st.session_state:
+    st.session_state.api_key_confirmed = False
 
-# OpenAI APIキーの取得（Streamlit Cloud用）
-api_key = st.secrets["OPENAI_API_KEY"]
+# APIキー入力フォーム
+with st.form("api_key_form"):
+    input_api_key = st.text_input("OpenAI APIキーを入力してください:", type="password")
+    
+    # 確認チェックボックス
+    confirm_save = st.checkbox("APIキーをブラウザに保存することを理解し、同意します。")
+    
+    submit_button = st.form_submit_button("APIキーを設定")
 
-st.write(f"API key found: {'Yes' if api_key else 'No'}")
-st.write(f"API key type: {type(api_key)}")
+    if submit_button:
+        if confirm_save:
+            st.session_state.api_key = input_api_key
+            st.session_state.api_key_confirmed = True
+            st.success("APIキーが設定されました。")
+        else:
+            st.error("APIキーの保存に同意していただく必要があります。")
 
-if api_key:
-    st.write(f"APIキーの先頭: {api_key[:5]}...")
+# 警告メッセージ
+st.warning("""
+注意: このアプリケーションはChromeブラウザでの使用を前提としています。
+入力したAPIキーはブラウザのローカルストレージに保存されます。
+公共のコンピューターや共有デバイスでは使用しないでください。
+""")
+
+# APIキーの確認
+if st.session_state.api_key and st.session_state.api_key_confirmed:
+    st.write(f"APIキーの先頭: {st.session_state.api_key[:5]}...")
+    
+    # OpenAIクライアントの初期化
+    try:
+        client = OpenAI(api_key=st.session_state.api_key)
+        st.write("OpenAI client created successfully")
+    except Exception as e:
+        st.error(f"Failed to create OpenAI client: {e}")
+        st.stop()
 else:
-    st.error("OpenAI API keyが見つかりません。Streamlit Cloudの'Secrets'セクションでOPENAI_API_KEYを設定してください。")
-    st.write("Available keys in st.secrets:", list(st.secrets.keys()))
+    st.warning("APIキーが設定されていないか、保存に同意していません。上のフォームでAPIキーを入力し、同意チェックボックスにチェックを入れてください。")
     st.stop()
 
-# OpenAIクライアントの初期化
-try:
-    client = OpenAI(api_key=api_key)
-    st.write("OpenAI client created successfully")
-except Exception as e:
-    st.error(f"Failed to create OpenAI client: {e}")
-    st.stop()
+def enhance_message(message, emotion, use_emoji):
+    try:
+        prompt = f"以下のメッセージを、「{emotion}」の感情を込めて改善してください。"
+        if use_emoji:
+            prompt += "適切な絵文字も追加してください。"
+        prompt += f"\n\nメッセージ: {message}"
 
-# 以下、既存のコード（enhance_message関数とmain関数）
-...
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "あなたはメッセージの改善を支援するアシスタントです。"},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        return response.choices[0].message.content
+    except Exception as e:
+        st.error(f"OpenAI APIエラー: {str(e)}")
+        return None
+
+def main():
+    st.title("メッセージ改善アプリ")
+
+    message = st.text_area("メッセージを入力してください：")
+
+    emotions = ["残念に思っている", "嬉しく思っている", "仲良くしたい", "申し訳なく思っている", "急いでほしい", "怒っている"]
+    emotion = st.selectbox("感情を選択してください：", emotions)
+
+    use_emoji = st.checkbox("絵文字を使用する")
+
+    if st.button("メッセージを改善"):
+        if message:
+            with st.spinner("メッセージを改善中..."):
+                improved_message = enhance_message(message, emotion, use_emoji)
+            if improved_message:
+                st.subheader("改善されたメッセージ：")
+                st.write(improved_message)
+        else:
+            st.warning("メッセージを入力してください。")
 
 if __name__ == "__main__":
     main()
